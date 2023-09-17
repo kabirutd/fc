@@ -1,0 +1,132 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<form id="dynamic-form">
+
+    Add up to 10 items in the RMA:  <button type="button" id="add-item">Add Item</button><br /><br />
+    <div id="form-items">
+        <!-- Initially, no form items -->
+    </div>
+    <br />
+   
+
+    <button type="submit">Submit</button>
+
+    <button type="button" id="generate-json">Generate JSON</button>
+</form>
+
+<div id="display-values">
+    <!-- Form field values will be displayed here -->
+</div>
+
+<div id="display-json">
+    <!-- JSON output will be displayed here -->
+</div>
+
+<script>
+    let itemCount = 0;
+
+    const formFields = {}; // To store form field values
+
+    document.getElementById('add-item').addEventListener('click', function () {
+        itemCount++;
+
+        if (itemCount<11)
+        {
+                  const formItemsContainer = document.getElementById('form-items');
+
+            const newItem = document.createElement('div');
+            newItem.innerHTML = `
+                        <label for="item${itemCount}">Item ${itemCount}:</label>
+                            <input type="text" id="item${itemCount}" name="item${itemCount}" required> <button type="button" class="fetch-info" data-item="item${itemCount}">Fetch Info</button>
+                    <br>
+
+                              <label for="co_num${itemCount}">Order Number ${itemCount}:</label>
+                            <input type="text" id="co_num${itemCount}" name="co_num${itemCount}" required>
+
+                                 <label for="reason_text${itemCount}">Reason Text ${itemCount}:</label>
+                                        <input type="text" id="reason_text${itemCount}" name="reason_text${itemCount}" required>
+                        
+                        <hr>
+                    `;
+
+            formItemsContainer.appendChild(newItem);
+
+
+            // Add event listener to fetch info button
+            const fetchButton = newItem.querySelector('.fetch-info');
+            fetchButton.addEventListener('click', function () {
+                const itemField = newItem.querySelector('input[type="text"]');
+                const itemName = itemField.getAttribute('name');
+
+                // Call the API here and populate the fields based on the API response
+                fetchInfoFromAPI(itemName);
+            });
+        }
+  
+    });
+</script>
+
+<script>
+
+
+
+    document.getElementById('dynamic-form').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent the default form submission behavior
+
+        // Access form field values and do something with them
+        const form = event.target;
+        const formData = new FormData(form);
+        //const formStr;
+
+        //for (const [key, value] of formData.entries()) {
+        //    //console.log(${key}: ${value}');
+        //    console.log(`${key}: ${value}`);
+        //    //formStr = formStr + '${key}: ${value}';
+        //    // You can replace console.log with any action you want to perform with the form data.
+        //}
+
+        const displayValues = document.getElementById('display-values');
+        displayValues.innerHTML = ''; // Clear previous values
+
+        for (const [key, value] of formData.entries()) {
+            const valueDisplay = document.createElement('p');
+            valueDisplay.textContent = `${key}: ${value}`;
+            //displayValues.appendChild(valueDisplay);
+        }
+
+        //json
+        formData.forEach((value, key) => {
+            formFields[key] = value;
+        });
+
+        const displayJSON = document.getElementById('display-json');
+        displayJSON.textContent = JSON.stringify(formFields, null, 2);
+    });
+
+
+    // Function to simulate API call and populate fields
+    function fetchInfoFromAPI(itemName) {
+
+        alert('fetchInfoFromAPI called for item: ' + itemName);
+        // Simulate an API call and populate fields with the response
+        //const reasonTextField = document.querySelector(`input[name="reason_text${itemName}"]`);
+        const coNumField = document.querySelector(`input[name="co_num${itemName}"]`);
+        const coLineField = document.querySelector(`input[name="co_line${itemName}"]`);
+
+        // Replace this with your actual API call
+        setTimeout(function () {
+            const apiResponse = {
+                reason_text: "Some Reason Text",
+                co_num: "12345",
+                co_line: "A"
+            };
+
+            //reasonTextField.value = apiResponse.reason_text;
+            coNumField.value = apiResponse.co_num;
+            coLineField.value = apiResponse.co_line;
+        }, 1000); // Simulate API call delay (1 second)
+    }
+</script>

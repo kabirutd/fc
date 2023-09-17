@@ -1,0 +1,219 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Form Items with API Data</title>
+</head>
+<body>
+    <form id="dynamic-form">
+        <div id="form-items">
+            <!-- Initially, no form items -->
+        </div>
+        <button type="button" id="add-item">Add Item</button>
+        <button type="button" id="generate-json">Generate JSON</button>
+        <button type="button" id="send-json">Send JSON</button>
+    </form>
+
+    <div id="display-json">
+        <!-- JSON output will be displayed here -->
+    </div>
+
+
+    <div id="api-response">
+        <!-- API responses and messages will be displayed here -->
+    </div>
+
+    <div id="api-response">
+        <!-- API responses and messages will be displayed here -->
+    </div>
+
+    <script>
+        //let itemCount = 0; // Start with 0 items
+        let itemCount = 0; // Start with 0 items
+        const formFields = {};
+
+        document.getElementById('add-item').addEventListener('click', function () {
+           // if (itemCount < 10) {
+                 if (itemCount < 10) {
+
+                itemCount++;
+               
+                const formItemsContainer = document.getElementById('form-items');
+
+                const newItem = document.createElement('div');
+                newItem.innerHTML = `
+                            <label for="item${itemCount}">Item ${itemCount}:</label>
+                            <input type="text" id="item${itemCount}" name="item${itemCount}" required>&nbsp;&nbsp;
+                            <button type="button" class="fetch-info" data-item="item${itemCount}">Fetch Info</button>
+                                    <br/><br/>
+                            <label for="reason_text${itemCount}">Reason Text:</label>
+                            <input type="text" id="reason_text${itemCount}" name="reason_text${itemCount}">
+                                    <br/><br/>
+                            <label for="co_num${itemCount}">CO Number:</label>
+                            <input type="text" id="co_num${itemCount}" readonly name="co_num${itemCount}">
+                                    <br/><br/>
+                            <label for="co_line${itemCount}">CO Line:</label>
+                                    <input type="text" id="co_line${itemCount}" readonly name="co_line${itemCount}">
+                            <hr>
+                        `;
+
+                formItemsContainer.appendChild(newItem);
+
+                // Add event listener to fetch info button
+                const fetchButton = newItem.querySelector('.fetch-info');
+                fetchButton.addEventListener('click', function () {
+                    const itemField = newItem.querySelector('input[type="text"]');
+                    const itemName = itemField.getAttribute('name');
+
+
+                    alert('itemName: ' + itemName);
+
+                    // Call the API here and populate fields based on the API response
+                    fetchInfoFromAPI(itemName, itemCount);
+                });
+
+                
+            } 
+            
+            else 
+            {
+                alert("You've reached the maximum number of items (10).");
+            }
+        });
+
+        document.getElementById('dynamic-form').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent the default form submission behavior
+        });
+
+        document.getElementById('generate-json').addEventListener('click', function () {
+            const form = document.getElementById('dynamic-form');
+            const formData = new FormData(form);
+
+           
+
+            formData.forEach((value, key) => {
+                formFields[key] = value;
+            });
+
+            const displayJSON = document.getElementById('display-json');
+            displayJSON.textContent = JSON.stringify(formFields, null, 2);
+        });
+
+
+        //send json data to an api
+
+        document.getElementById('send-json').addEventListener('click', function () {
+            // Replace this with your API endpoint for sending the JSON data
+            const apiUrl = 'https://example.com/api/endpoint';
+            const apiResponseDiv = document.getElementById('api-response');
+
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formFields),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API response:', data);
+                    //alert('JSON data sent successfully.');
+
+                    //retrieve message from the calling API
+                    //if (data && data.message) {
+                    //    alert('Confirmation from API: ' + data.message);
+                    //} else {
+                    //    alert('JSON data sent successfully.');
+                    //}
+
+                    if (data && data.message) {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.textContent = 'Confirmation from API: ' + data.message;
+                        apiResponseDiv.appendChild(messageDiv);
+                    } else {
+                        const successDiv = document.createElement('div');
+                        successDiv.textContent = 'JSON data sent successfully.';
+                        apiResponseDiv.appendChild(successDiv);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending JSON data:', error);
+                    //alert('Error sending JSON data.');
+
+                    const errorDiv = document.createElement('div');
+                    errorDiv.textContent = 'Error sending JSON data.';
+                    apiResponseDiv.appendChild(errorDiv);
+                });
+        });
+
+
+        // Function to simulate API call and populate fields
+        function fetchInfoFromAPI(itemName, count) {
+            // Simulate an API call and populate fields with the response
+            //const reasonTextField = document.querySelector(`input[name="reason_text${itemName}"]`);
+            //const coNumField = document.querySelector(`input[name="co_num${itemName}"]`);
+            //const coLineField = document.querySelector(`input[name="co_line${itemName}"]`);
+
+            alert('itemName: ' + itemName);
+            alert('count: ' + count);
+
+                const reasonTextField = document.querySelector(`input[name="reason_text${count}"]`);
+            const coNumField = document.querySelector(`input[name="co_num${count}"]`);
+            const coLineField = document.querySelector(`input[name="co_line${count}"]`);
+
+
+            if (reasonTextField)
+            {
+
+                alert('reasonTextField is ok');
+            }
+
+            else{
+
+                alert('reasonTextField is not ok');
+            }
+
+            if (coNumField) {
+
+                alert('coNumField is ok');
+            }
+
+            else{
+
+                alert('coNumField is not ok');
+            }
+
+            if (coLineField) {
+
+                alert('coLineField is ok');
+            }
+
+            else {
+
+                alert('coLineField is not ok');
+            }
+
+            // Replace this with your actual API call
+            if (reasonTextField && coNumField && coLineField) {
+                // Only set values if the elements exist
+                setTimeout(function () {
+                    const apiResponse = {
+                        reason_text: "Some Reason Text",
+                        co_num: "12345",
+                        co_line: "A"
+                    };
+
+                    reasonTextField.value = apiResponse.reason_text;
+                    coNumField.value = apiResponse.co_num;
+                    coLineField.value = apiResponse.co_line;
+                }, 1000); // Simulate API call delay (1 second)
+            } else {
+                console.error("One or more elements not found in the DOM.");
+            }
+
+        }
+    </script>
+</body>
+</html>
