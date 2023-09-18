@@ -1,37 +1,82 @@
-﻿<!DOCTYPE html>
+﻿@{
+
+    var cust_num = "";
+
+    if (ViewData["cust_num"] != null)
+    {
+        cust_num = ViewData["cust_num"].ToString();
+    }
+
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Form Items with API Data</title>
 </head>
+
+<style>
+
+    .transparent-input {
+        background: transparent;
+        border: none;
+        outline: none; /* Removes the focus border */
+       /* width: 100%;*/ /* Optional: Set the width as needed */
+        /*color: #fff;*/ /* Optional: Set the text color */
+    }
+
+
+</style>
 <body>
+
+    Customer ID: @cust_num<br /><br />
     <form id="dynamic-form">
+
+    <input type="hidden" name="rma_num" id="rma_num" />
+
+        Add up to 10 Items in the RMA: &nbsp;&nbsp;<button type="button" id="add-item">Add Item</button><br /><br />
         <div id="form-items">
             <!-- Initially, no form items -->
         </div>
-        <button type="button" id="add-item">Add Item</button>
+        
         <button type="button" id="generate-json">Generate JSON</button>
         <button type="button" id="send-json">Send JSON</button>
     </form>
 
+    <br />
+
+    RMA JSON:<br />
+    <div id="display-rmajson">
+        <!-- JSON output will be displayed here -->
+    </div>
+
+    <br />
+
+    RMA LINES JSON:
+    <br />
     <div id="display-json">
         <!-- JSON output will be displayed here -->
     </div>
 
-
+    <br />
     <div id="api-response">
         <!-- API responses and messages will be displayed here -->
     </div>
 
-    <div id="api-response">
+    <div id="api-response2">
         <!-- API responses and messages will be displayed here -->
     </div>
+
+    <br />
+    ITEM DETAILS: <br />
+    <pre id="result"></pre>
 
     <script>
         //let itemCount = 0; // Start with 0 items
         let itemCount = 0; // Start with 0 items
         const formFields = {};
+        const resultElement = document.getElementById('result');
 
         document.getElementById('add-item').addEventListener('click', function () {
            // if (itemCount < 10) {
@@ -42,23 +87,42 @@
                 const formItemsContainer = document.getElementById('form-items');
 
                 const newItem = document.createElement('div');
+
+                const newItem2 = document.createElement('div');
                 newItem.innerHTML = `
                             <label for="item${itemCount}">Item ${itemCount}:</label>
-                            <input type="text" id="item${itemCount}" name="item${itemCount}" required>&nbsp;&nbsp;
-                            <button type="button" class="fetch-info" data-item="item${itemCount}">Fetch Info</button>
-                                    <br/><br/>
-                            <label for="reason_text${itemCount}">Reason Text:</label>
-                            <input type="text" id="reason_text${itemCount}" name="reason_text${itemCount}">
-                                    <br/><br/>
-                            <label for="co_num${itemCount}">CO Number:</label>
-                            <input type="text" id="co_num${itemCount}" readonly name="co_num${itemCount}">
-                                    <br/><br/>
-                            <label for="co_line${itemCount}">CO Line:</label>
-                                    <input type="text" id="co_line${itemCount}" readonly name="co_line${itemCount}">
+                            <input type="text" id="item${itemCount}" name="item${itemCount}" required/>&nbsp;&nbsp;
+                            <button type="button" class="fetch-info" data-item="item${itemCount}">Get Item Details</button>
+                                                                               <br/>
+
+                                            <label for="co_num${itemCount}">CO Number:</label> <input type="text" id="co_num${itemCount}" readonly class="transparent-input" name="co_num${itemCount}"/><br/>
+                                   
+                                    
+                            <label for="co_line${itemCount}">CO Line:</label> <input type="text" id="co_line${itemCount}" readonly class="transparent-input" name="co_line${itemCount}"/><br/>
+                                       <label for="reason_text${itemCount}">Reason Text:</label><br/>
+                                            <textarea id="reason_text${itemCount}" name="reason_text${itemCount}" rows="3" cols="40"></textarea>
+                                           
                             <hr>
                         `;
 
+                 newItem2.innerHTML = `
+                            <label for="item">Item :</label>
+                            <input type="text" id="item" name="item" required/>&nbsp;&nbsp;
+                            <button type="button" class="fetch-info" data-item="item">Get Item Details</button>
+                                                                               <br/>
+
+                                            <label for="co_num">CO Number:</label> <input type="text" id="co_num" readonly class="transparent-input" name="co_num"/><br/>
+                                   
+                                    
+                            <label for="co_line">CO Line:</label> <input type="text" id="co_line" readonly class="transparent-input" name="co_line"/><br/>
+                                       <label for="reason_text">Reason Text:</label><br/>
+                                            <textarea id="reason_text" name="reason_text" rows="3" cols="40"></textarea>
+                                           
+                            <hr>
+                        `;
                 formItemsContainer.appendChild(newItem);
+
+                //formItemsContainer.appendChild(newItem2);
 
                 // Add event listener to fetch info button
                 const fetchButton = newItem.querySelector('.fetch-info');
@@ -66,11 +130,10 @@
                     const itemField = newItem.querySelector('input[type="text"]');
                     const itemName = itemField.getAttribute('name');
 
+                    //call async function rather
+                    fetchInfoFromAPIAsync(itemName, itemCount);
 
-                    alert('itemName: ' + itemName);
-
-                    // Call the API here and populate fields based on the API response
-                    fetchInfoFromAPI(itemName, itemCount);
+                    
                 });
 
                 
@@ -86,11 +149,102 @@
             event.preventDefault(); // Prevent the default form submission behavior
         });
 
-        document.getElementById('generate-json').addEventListener('click', function () {
-            const form = document.getElementById('dynamic-form');
-            const formData = new FormData(form);
 
-           
+        /*
+        ================================================================================
+
+            function generateRMAJSON()
+
+            Returns a rma_num that will be passed to rma line items JSON
+
+
+        =================================================================================
+        */
+
+        function generateRMAJSON()
+        
+        {
+            const today = new Date();
+            const rmaObject = {
+                
+                //site_ref = "fc"; //this shoudl be default value
+                rma_date: today, //"12345",
+                cust_num: "@cust_num", // "A"
+            };
+
+            const displayRMAJSON = document.getElementById('display-rmajson');
+            displayRMAJSON.textContent = JSON.stringify(rmaObject, null, 2);
+
+            //send rma json to api
+
+            //commenting out for now
+            /*
+
+            var apiUrl = 'https://example.com/api/endpoint';
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                //body: JSON.stringify(formFields),
+                body: JSON.stringify(rmaObject, null, 2),
+            })
+                .then(response => response.json())
+                .then(data => {
+                   
+                    if (data && data.message) {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.textContent = 'Confirmation from API: ' + data.message;
+                        apiResponseDiv.appendChild(messageDiv);
+
+                        return data.message;
+                    } else {
+                        const successDiv = document.createElement('div');
+                        successDiv.textContent = 'JSON data sent successfully.';
+                        apiResponseDiv.appendChild(successDiv);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending JSON data:', error);
+                    //alert('Error sending JSON data.');
+
+                    const errorDiv = document.createElement('div');
+                    errorDiv.textContent = 'Error sending JSON data.';
+                    apiResponseDiv.appendChild(errorDiv);
+                });
+                */
+
+                //returning hard coded value for now..we will return rma number from calling the api later
+
+            return "R7612345";
+
+        }
+
+        /*
+        ================================================================================
+
+        function generate-json
+
+        sends rma line items JSON to the api
+
+
+        =================================================================================
+        */
+
+        document.getElementById('generate-json').addEventListener('click', function () {
+            
+            var vRMANum = "";
+            //send rma json first and get rma_num back from the api that will be passed to rma line items json
+            vRMANum = generateRMAJSON();
+
+            //assign RMA number from above to the hidden field and send it to rma line items JSON
+            const rmanum = document.getElementById('rma_num');            
+            rmanum.value = vRMANum; //"R4532456";
+            
+            //get all the form items to stringfy as json
+            const form = document.getElementById('dynamic-form');
+            const formData = new FormData(form);           
 
             formData.forEach((value, key) => {
                 formFields[key] = value;
@@ -148,72 +302,256 @@
                 });
         });
 
+        /*
 
-        // Function to simulate API call and populate fields
-        function fetchInfoFromAPI(itemName, count) {
+            async function fetchInfoFromAPIAsync(itemName, count)
+
+
+
+        */
+
+        async function fetchInfoFromAPIAsync(itemName, count) {
+       
+
+            const resultElement = document.getElementById('result');
+
+            var itemVal = document.getElementById(itemName).value;
+            //alert('itemVal: ' + itemVal);
+
+            const itemToFetch = itemVal; //'Item003';
+
+        
+            const reasonTextField = document.querySelector(`input[name="reason_text${count}"]`);
+            const coNumField = document.querySelector(`input[name="co_num${count}"]`);
+            const coLineField = document.querySelector(`input[name="co_line${count}"]`);
+
+            await fetch('/data/itemdetail.json')
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('HTTP error! Status: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    //const itemToFetch = 'Item003'; // Replace with the item you want to fetch
+
+                    const itemData = data.find(item => item.item === itemToFetch);
+                    if (itemData) {
+                        resultElement.textContent = JSON.stringify(itemData, null, 2);
+
+                        //populate input fields with json data
+                        const fetchedItemObject = {
+                            //reason_text: itemData. //"Some Reason Text",
+                            co_num: itemData.co_num, //"12345",
+                            co_line: itemData.co_line, // "A"
+                        };
+
+                        coNumField.value = fetchedItemObject.co_num;
+                        coLineField.value = fetchedItemObject.co_line;
+
+                    } else {
+                        resultElement.textContent = 'Item not found';
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                    resultElement.textContent = 'Error fetching or parsing data';
+                });
+
+
+
+        }
+
+        function fetchInfoFromAPI2(itemName, count) {
             // Simulate an API call and populate fields with the response
             //const reasonTextField = document.querySelector(`input[name="reason_text${itemName}"]`);
             //const coNumField = document.querySelector(`input[name="co_num${itemName}"]`);
             //const coLineField = document.querySelector(`input[name="co_line${itemName}"]`);
 
-            alert('itemName: ' + itemName);
-            alert('count: ' + count);
+            //const fs = require('fs');
 
-                const reasonTextField = document.querySelector(`input[name="reason_text${count}"]`);
+            //alert('itemName: ' + itemName);
+
+            const resultElement = document.getElementById('result');
+
+            var itemVal = document.getElementById(itemName).value;
+            alert('itemVal: ' + itemVal);
+
+            const itemToFetch = itemVal; //'Item003';
+
+            //alert('count: ' + count);
+
+            const reasonTextField = document.querySelector(`input[name="reason_text${count}"]`);
+            const coNumField = document.querySelector(`input[name="co_num${count}"]`);
+            const coLineField = document.querySelector(`input[name="co_line${count}"]`);
+
+            fetch('/data/itemdetail.json')
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('HTTP error! Status: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    //const itemToFetch = 'Item003'; // Replace with the item you want to fetch
+
+                    const itemData = data.find(item => item.item === itemToFetch);
+                    if (itemData) {
+                        resultElement.textContent = JSON.stringify(itemData, null, 2);
+                    } else {
+                        resultElement.textContent = 'Item not found';
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                    resultElement.textContent = 'Error fetching or parsing data';
+                });
+
+
+    
+        }
+
+     function fetchInfoFromAPI(itemName, count) {
+            // Simulate an API call and populate fields with the response
+            //const reasonTextField = document.querySelector(`input[name="reason_text${itemName}"]`);
+            //const coNumField = document.querySelector(`input[name="co_num${itemName}"]`);
+            //const coLineField = document.querySelector(`input[name="co_line${itemName}"]`);
+
+            //const fs = require('fs');
+
+            //alert('itemName: ' + itemName);
+
+            var itemVal = document.getElementById(itemName).value;
+            alert('itemVal: ' + itemVal);
+
+            const itemToFetch = itemVal; //'Item003'; 
+            
+            //alert('count: ' + count);
+
+            const reasonTextField = document.querySelector(`input[name="reason_text${count}"]`);
             const coNumField = document.querySelector(`input[name="co_num${count}"]`);
             const coLineField = document.querySelector(`input[name="co_line${count}"]`);
 
 
-            if (reasonTextField)
-            {
-
-                alert('reasonTextField is ok');
-            }
-
-            else{
-
-                alert('reasonTextField is not ok');
-            }
-
-            if (coNumField) {
-
-                alert('coNumField is ok');
-            }
-
-            else{
-
-                alert('coNumField is not ok');
-            }
-
-            if (coLineField) {
-
-                alert('coLineField is ok');
-            }
-
-            else {
-
-                alert('coLineField is not ok');
-            }
+           
 
             // Replace this with your actual API call
-            if (reasonTextField && coNumField && coLineField) {
+            if (reasonTextField && coNumField && coLineField) 
+            {
+                alert ('all fields are ok for now..');
                 // Only set values if the elements exist
                 setTimeout(function () {
-                    const apiResponse = {
-                        reason_text: "Some Reason Text",
-                        co_num: "12345",
-                        co_line: "A"
-                    };
+                    
+                    //read from json file
 
-                    reasonTextField.value = apiResponse.reason_text;
-                    coNumField.value = apiResponse.co_num;
-                    coLineField.value = apiResponse.co_line;
+                    //fs.readFile('~/data/itemdetail.json', 'utf8', (err, data) => {
+                  
+
+                  try {
+
+                        alert('beginning of try..');
+                    //const response = await fetch('~/data/itemdetail.json');
+
+                    const response = fetch('/data/itemdetail.json');
+                     resultElement.textContent = `HTTP error! Status: ${response.status}`;
+                    //const jsonData = JSON.parse(data);
+
+                   //const jsonData = await response.json();
+                        const jsonData =  response.json();
+
+                    if (!response.ok) {
+                      throw new Error(`HTTP error! Status: ${response.status}`);
+
+                            resultElement.textContent = `HTTP error! Status: ${response.status}`;
+                    }
+
+                    else
+                    {
+                            resultElement.textContent = JSON.stringify(jsonData, null, 2);
+                    }
+                    const itemData = jsonData.find(item => item.item === itemToFetch);
+
+                    if (itemData) {
+                      //console.log('Item Data:', itemData);
+
+                       //save corresponding item detail into an array object
+
+                            resultElement.textContent = JSON.stringify(itemData, null, 2);
+
+                           
+                        const apiResponse = {
+                                    //reason_text: itemData. //"Some Reason Text",
+                                    co_num: itemData.co_num, //"12345",
+                                    co_line: itemData.co_line, // "A"
+                        };
+
+                        //reasonTextField.value = apiResponse.reason_text;
+                        coNumField.value = apiResponse.co_num;
+                        coLineField.value = apiResponse.co_line;
+
+
+                    } else {
+                       //console.log('Item not found');
+                            resultElement.textContent = 'Item not found';
+                    }
+                  } catch (error) {
+                    //console.error('Error parsing JSON:', error);
+
+                        resultElement.textContent = 'Error fetching data';
+                  }
+
                 }, 1000); // Simulate API call delay (1 second)
-            } else {
+                
+            //});
+
+
+                    
+                   
+               
+            } 
+            
+            else 
+            
+            {
                 console.error("One or more elements not found in the DOM.");
             }
 
-        }
+     }
+        
+        //);
+    </script>
+
+    <script>
+
+        const fetchDataButton = document.getElementById('fetchData');
+        const resultElement2 = document.getElementById('result');
+
+        fetchDataButton.addEventListener('click', async () => {
+          try {
+            const response = await fetch('/data/itemdetail.json');
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            else {
+                resultElement2.textContent = JSON.stringify(jsonData, null, 2);
+            }
+
+            const data = await response.json();
+            const itemToFetch = 'Item003'; // Replace with the item you want to fetch
+
+            const itemData = data.find(item => item.item === itemToFetch);
+            if (itemData) {
+              resultElement2.textContent = JSON.stringify(itemData, null, 2);
+            } else {
+              resultElement2.textContent = 'Item not found';
+            }
+          
+          } catch (error) {
+            console.error('Error:', error);
+            resultElement2.textContent = 'Error fetching data';
+  }
+});
+
     </script>
 </body>
 </html>
