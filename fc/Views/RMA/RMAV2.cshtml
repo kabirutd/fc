@@ -1,10 +1,19 @@
 ﻿@{
 
     var cust_num = "";
+    var rma_num = "";
+    var rma_num_str = "";
 
     if (ViewData["cust_num"] != null)
     {
         cust_num = ViewData["cust_num"].ToString();
+    }
+
+    if (ViewData["rma_num"] != null)
+    {
+        rma_num = ViewData["rma_num"].ToString();
+
+        rma_num_str = "RMA Number: " + rma_num;
     }
 
 }
@@ -30,7 +39,12 @@
 </style>
 <body>
 
-    Customer ID: @cust_num<br /><br />
+    Customer ID: @cust_num   &nbsp;&nbsp;&nbsp; RMA Number: <span id="rma_num"></span> @*@rma_num_str*@
+    
+    
+    
+    <br />
+    <br />
     <form id="dynamic-form">
 
     <input type="hidden" name="rma_num" id="rma_num" />
@@ -40,11 +54,16 @@
             <!-- Initially, no form items -->
         </div>
         
-        <button type="button" id="generate-json">Generate JSON</button>
-        <button type="button" id="send-json">Send JSON</button>
+        <button type="button" id="generate-json">Create RMA</button>&nbsp;&nbsp;
+
+        <button type="button" id="send-json">Send Test JSON</button>
     </form>
 
     <br />
+
+    DEBUG INFO:
+    <br />
+    ===========================================================<br />
 
     RMA JSON:<br />
     <div id="display-rmajson">
@@ -60,6 +79,16 @@
     </div>
 
     <br />
+
+     RMA LINES JSON 2:
+    <br />
+    <div id="display-json2">
+        
+    </div>
+
+    <br />
+
+
     <div id="api-response">
         <!-- API responses and messages will be displayed here -->
     </div>
@@ -73,6 +102,10 @@
     <pre id="result"></pre>
 
     <script>
+
+        //Global variables
+        var g_rmanum="";
+
         //let itemCount = 0; // Start with 0 items
         let itemCount = 0; // Start with 0 items
         const formFields = {};
@@ -93,14 +126,15 @@
                             <label for="item${itemCount}">Item ${itemCount}:</label>
                             <input type="text" id="item${itemCount}" name="item${itemCount}" required/>&nbsp;&nbsp;
                             <button type="button" class="fetch-info" data-item="item${itemCount}">Get Item Details</button>
-                                                                               <br/>
+                                                                               <br/><br/>
 
-                                            <label for="co_num${itemCount}">CO Number:</label> <input type="text" id="co_num${itemCount}" readonly class="transparent-input" name="co_num${itemCount}"/><br/>
-                                   
-                                    
-                            <label for="co_line${itemCount}">CO Line:</label> <input type="text" id="co_line${itemCount}" readonly class="transparent-input" name="co_line${itemCount}"/><br/>
+                 <label for="co_num${itemCount}">CO Number:</label> <input type="text" id="co_num${itemCount}" readonly class="transparent-input co_num" name="co_num${itemCount}"/>&nbsp;&nbsp;
+
+                 <label for="co_line${itemCount}">CO Line:</label> <input type="text" id="co_line${itemCount}" readonly class="transparent-input co_line" name="co_line${itemCount}"/>&nbsp;&nbsp;
+                                                 <label for="ship_date${itemCount}">Ship Date:</label> <input type="text" id="ship_date${itemCount}" readonly class="transparent-input ship_date" name="ship_date${itemCount}"/>&nbsp;&nbsp;
+                                    <br/>
                                        <label for="reason_text${itemCount}">Reason Text:</label><br/>
-                                            <textarea id="reason_text${itemCount}" name="reason_text${itemCount}" rows="3" cols="40"></textarea>
+                                                    <textarea id="reason_text${itemCount}" class="reason_text" name="reason_text${itemCount}" rows="3" cols="40"></textarea>
                                            
                             <hr>
                         `;
@@ -130,9 +164,8 @@
                     const itemField = newItem.querySelector('input[type="text"]');
                     const itemName = itemField.getAttribute('name');
 
-                    //call async function rather
+                    //call async function rather to get item details including order and shipped info
                     fetchInfoFromAPIAsync(itemName, itemCount);
-
                     
                 });
 
@@ -216,8 +249,9 @@
                 */
 
                 //returning hard coded value for now..we will return rma number from calling the api later
-
-            return "R7612345";
+            g_rmanum = "R7612345";
+               
+            return g_rmanum; //"R7612345";
 
         }
 
@@ -236,22 +270,62 @@
             
             var vRMANum = "";
             //send rma json first and get rma_num back from the api that will be passed to rma line items json
-            vRMANum = generateRMAJSON();
+            
+            if (g_rmanum !="")
+            {
+                vRMANum = g_rmanum;
+            }
+
+            else
+            {
+                 vRMANum = generateRMAJSON();
+            }
+           
 
             //assign RMA number from above to the hidden field and send it to rma line items JSON
             const rmanum = document.getElementById('rma_num');            
             rmanum.value = vRMANum; //"R4532456";
+
+            const displayRMA_Num = document.getElementById('rma_num');
+            displayRMA_Num.textContent = vRMANum; 
             
             //get all the form items to stringfy as json
             const form = document.getElementById('dynamic-form');
-            const formData = new FormData(form);           
+            const formData = new FormData(form);   
+            
+           
+
+            var rmaLineObject;
 
             formData.forEach((value, key) => {
                 formFields[key] = value;
+
+                const conum = document.querySelector('.co_num');
+                const coline = document.querySelector('.co_line');
+                const shipdate = document.querySelector('.ship_date');
+
+                
+                const reasontext = document.querySelector('.reason_text');
+
+                  rmaLineObject = {
+                
+                    //site_ref = "fc"; //this shoudl be default value
+                    co_num: conum.value, //"12345",
+                    co_line: coline.value, // "A"
+                    reason_text: reasontext.value,
+                    ship_date: shipdate.value,
+
+                };
             });
 
             const displayJSON = document.getElementById('display-json');
             displayJSON.textContent = JSON.stringify(formFields, null, 2);
+
+
+                  const displayJSON2 = document.getElementById('display-json2');
+            //displayJSON2.textContent = JSON.stringify(rmaLineObject, null, 2);
+
+            displayJSON2.textContent = JSON.stringify(rmaLineObject);
         });
 
 
@@ -303,15 +377,15 @@
         });
 
         /*
+        ==============================================================================
 
             async function fetchInfoFromAPIAsync(itemName, count)
 
 
-
+        ===================================================================================
         */
 
-        async function fetchInfoFromAPIAsync(itemName, count) {
-       
+        async function fetchInfoFromAPIAsync(itemName, count) {       
 
             const resultElement = document.getElementById('result');
 
@@ -324,6 +398,7 @@
             const reasonTextField = document.querySelector(`input[name="reason_text${count}"]`);
             const coNumField = document.querySelector(`input[name="co_num${count}"]`);
             const coLineField = document.querySelector(`input[name="co_line${count}"]`);
+            const shipDateField = document.querySelector(`input[name="ship_date${count}"]`);
 
             await fetch('/data/itemdetail.json')
                 .then(function (response) {
@@ -344,10 +419,12 @@
                             //reason_text: itemData. //"Some Reason Text",
                             co_num: itemData.co_num, //"12345",
                             co_line: itemData.co_line, // "A"
+                            ship_date: itemData.ship_date,
                         };
 
                         coNumField.value = fetchedItemObject.co_num;
                         coLineField.value = fetchedItemObject.co_line;
+                        shipDateField.value = fetchedItemObject.ship_date;
 
                     } else {
                         resultElement.textContent = 'Item not found';
@@ -523,34 +600,34 @@
 
     <script>
 
-        const fetchDataButton = document.getElementById('fetchData');
-        const resultElement2 = document.getElementById('result');
+        //const fetchDataButton = document.getElementById('fetchData');
+        //const resultElement2 = document.getElementById('result');
 
-        fetchDataButton.addEventListener('click', async () => {
-          try {
-            const response = await fetch('/data/itemdetail.json');
-            if (!response.ok) {
-              throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            else {
-                resultElement2.textContent = JSON.stringify(jsonData, null, 2);
-            }
+        //fetchDataButton.addEventListener('click', async () => {
+        //  try {
+        //    const response = await fetch('/data/itemdetail.json');
+        //    if (!response.ok) {
+        //      throw new Error(`HTTP error! Status: ${response.status}`);
+        //    }
+        //    else {
+        //        resultElement2.textContent = JSON.stringify(jsonData, null, 2);
+        //    }
 
-            const data = await response.json();
-            const itemToFetch = 'Item003'; // Replace with the item you want to fetch
+        //    const data = await response.json();
+        //    const itemToFetch = 'Item003'; // Replace with the item you want to fetch
 
-            const itemData = data.find(item => item.item === itemToFetch);
-            if (itemData) {
-              resultElement2.textContent = JSON.stringify(itemData, null, 2);
-            } else {
-              resultElement2.textContent = 'Item not found';
-            }
+        //    const itemData = data.find(item => item.item === itemToFetch);
+        //    if (itemData) {
+        //      resultElement2.textContent = JSON.stringify(itemData, null, 2);
+        //    } else {
+        //      resultElement2.textContent = 'Item not found';
+        //    }
           
-          } catch (error) {
-            console.error('Error:', error);
-            resultElement2.textContent = 'Error fetching data';
-  }
-});
+        //  } catch (error) {
+        //    console.error('Error:', error);
+        //    resultElement2.textContent = 'Error fetching data';
+        //  }
+        //});
 
     </script>
 </body>
