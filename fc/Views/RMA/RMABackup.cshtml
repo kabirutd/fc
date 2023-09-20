@@ -31,29 +31,29 @@
         background: transparent;
         border: none;
         outline: none; /* Removes the focus border */
-       /* width: 100%;*/ /* Optional: Set the width as needed */
+        /* width: 100%;*/ /* Optional: Set the width as needed */
         /*color: #fff;*/ /* Optional: Set the text color */
     }
-
 
 </style>
 <body>
 
-    Customer ID: @cust_num   &nbsp;&nbsp;&nbsp; RMA Number: <span id="rma_num"></span> @*@rma_num_str*@
-    
-    
-    
+    Customer ID: @cust_num   &nbsp;&nbsp;&nbsp; RMA Number:
+    <span id="rma_num"></span> @*@rma_num_str*@
+
+
+
     <br />
     <br />
     <form id="dynamic-form">
 
-    <input type="hidden" name="rma_num" id="rma_num" />
+        <input type="hidden" name="rma_num" id="rma_num" />
 
         Add up to 10 Items in the RMA: &nbsp;&nbsp;<button type="button" id="add-item">Add Item</button><br /><br />
         <div id="form-items">
             <!-- Initially, no form items -->
         </div>
-        
+
         <button type="button" id="generate-json">Create RMA</button>&nbsp;&nbsp;
 
         <button type="button" id="send-json">Send Test JSON</button>
@@ -63,9 +63,11 @@
 
     DEBUG INFO:
     <br />
-    ===========================================================<br />
+    ===========================================================
+    <br />
 
-    RMA JSON:<br />
+    RMA JSON:
+    <br />
     <div id="display-rmajson">
         <!-- JSON output will be displayed here -->
     </div>
@@ -80,10 +82,9 @@
 
     <br />
 
-     RMA LINES JSON 2:
+    RMA LINES JSON 2:
     <br />
     <div id="display-json2">
-        
     </div>
 
     <br />
@@ -98,15 +99,14 @@
     </div>
 
     <br />
-    ITEM DETAILS: <br />
+    ITEM DETAILS:
+    <br />
     <pre id="result"></pre>
-
-    <div id="itemdetails"></div>
 
     <script>
 
         //Global variables
-        var g_rmanum="";
+        var g_rmanum = "";
 
         //let itemCount = 0; // Start with 0 items
         let itemCount = 0; // Start with 0 items
@@ -114,11 +114,11 @@
         const resultElement = document.getElementById('result');
 
         document.getElementById('add-item').addEventListener('click', function () {
-           // if (itemCount < 10) {
-                 if (itemCount < 10) {
+            // if (itemCount < 10) {
+            if (itemCount < 10) {
 
                 itemCount++;
-               
+
                 const formItemsContainer = document.getElementById('form-items');
 
                 const newItem = document.createElement('div');
@@ -126,30 +126,30 @@
                 const newItem2 = document.createElement('div');
 
                 newItem.innerHTML = `
-                            <label for="item${itemCount}">Item ${itemCount}:</label>
-                            <input type="text" id="item${itemCount}" name="item${itemCount}" required/>&nbsp;&nbsp;
-                            <button type="button" class="fetch-info" data-item="item${itemCount}">Get Item Details</button>
-                                                                               <br/><br/>
+                                    <label for="item${itemCount}">Item ${itemCount}:</label>
+                                    <input type="text" id="item${itemCount}" name="item${itemCount}" required/>&nbsp;&nbsp;
+                                    <button type="button" class="fetch-info" data-item="item${itemCount}">Get Item Details</button>
+                                                                                       <br/><br/>
 
-                 <!---------------------------------- LOOP THROUGH MULTIPLE ORDERS FOR THE ITEM--------------------------------------->
+                         <!---------------------------------- LOOP THROUGH MULTIPLE ORDERS FOR THE ITEM--------------------------------------->
 
-                 
-                 <label for="co_num${itemCount}">CO Number:</label> <input type="text" id="co_num${itemCount}" readonly class="transparent-input co_num" name="co_num${itemCount}"/>&nbsp;&nbsp;
 
-                 <label for="co_line${itemCount}">CO Line:</label> <input type="text" id="co_line${itemCount}" readonly class="transparent-input co_line" name="co_line${itemCount}"/>&nbsp;&nbsp;
-                                                 <label for="ship_date${itemCount}">Ship Date:</label> <input type="text" id="ship_date${itemCount}" readonly class="transparent-input ship_date" name="ship_date${itemCount}"/>&nbsp;&nbsp;
-                                    <br/>
-                                       <label for="reason_text${itemCount}">Reason Text:</label><br/>
-                                                    <textarea id="reason_text${itemCount}" class="reason_text" name="reason_text${itemCount}" rows="3" cols="40"></textarea>
+                         <label for="co_num${itemCount}">CO Number:</label> <input type="text" id="co_num${itemCount}" readonly class="transparent-input co_num" name="co_num${itemCount}"/>&nbsp;&nbsp;
 
-                 <!---------------------------------- LOOP THROUGH MULTIPLE ORDERS FOR THE ITEM--------------------------------------->
-                                    <hr>
-                        `;
+                         <label for="co_line${itemCount}">CO Line:</label> <input type="text" id="co_line${itemCount}" readonly class="transparent-input co_line" name="co_line${itemCount}"/>&nbsp;&nbsp;
+                                                         <label for="ship_date${itemCount}">Ship Date:</label> <input type="text" id="ship_date${itemCount}" readonly class="transparent-input ship_date" name="ship_date${itemCount}"/>&nbsp;&nbsp;
+                                            <br/>
+                                               <label for="reason_text${itemCount}">Reason Text:</label><br/>
+                                                            <textarea id="reason_text${itemCount}" class="reason_text" name="reason_text${itemCount}" rows="3" cols="40"></textarea>
 
-                 
+                         <!---------------------------------- LOOP THROUGH MULTIPLE ORDERS FOR THE ITEM--------------------------------------->
+                                            <hr>
+                                `;
+
+
                 formItemsContainer.appendChild(newItem);
 
-               
+
                 // Add event listener to fetch ITEM DETAILS
                 //===========================================================================
 
@@ -163,13 +163,12 @@
 
                     //call async function rather to get item details including order and shipped info
                     fetchInfoFromAPIAsync(itemName, itemCount);
-                    
+
                 });
-                
-            } 
-            
-            else 
-            {
+
+            }
+
+            else {
                 alert("You've reached the maximum number of items (10).");
             }
         });
@@ -190,12 +189,10 @@
         =================================================================================
         */
 
-        function generateRMAJSON()
-        
-        {
+        function generateRMAJSON() {
             const today = new Date();
             const rmaObject = {
-                
+
                 //site_ref = "fc"; //this shoudl be default value
                 rma_date: today, //"12345",
                 cust_num: "@cust_num", // "A"
@@ -221,7 +218,7 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                   
+
                     if (data && data.message) {
                         const messageDiv = document.createElement('div');
                         messageDiv.textContent = 'Confirmation from API: ' + data.message;
@@ -244,9 +241,9 @@
                 });
                 */
 
-                //returning hard coded value for now..we will return rma number from calling the api later
+            //returning hard coded value for now..we will return rma number from calling the api later
             g_rmanum = "R7612345";
-               
+
             return g_rmanum; //"R7612345";
 
         }
@@ -263,33 +260,31 @@
         */
 
         document.getElementById('generate-json').addEventListener('click', function () {
-            
+
             var vRMANum = "";
             //send rma json first and get rma_num back from the api that will be passed to rma line items json
-            
-            if (g_rmanum !="")
-            {
+
+            if (g_rmanum != "") {
                 vRMANum = g_rmanum;
             }
 
-            else
-            {
-                 vRMANum = generateRMAJSON();
+            else {
+                vRMANum = generateRMAJSON();
             }
-           
+
 
             //assign RMA number from above to the hidden field and send it to rma line items JSON
-            const rmanum = document.getElementById('rma_num');            
+            const rmanum = document.getElementById('rma_num');
             rmanum.value = vRMANum; //"R4532456";
 
             const displayRMA_Num = document.getElementById('rma_num');
-            displayRMA_Num.textContent = vRMANum; 
-            
+            displayRMA_Num.textContent = vRMANum;
+
             //get all the form items to stringfy as json
             const form = document.getElementById('dynamic-form');
-            const formData = new FormData(form);   
-            
-           
+            const formData = new FormData(form);
+
+
 
             var rmaLineObject;
 
@@ -300,11 +295,11 @@
                 const coline = document.querySelector('.co_line');
                 const shipdate = document.querySelector('.ship_date');
 
-                
+
                 const reasontext = document.querySelector('.reason_text');
 
-                  rmaLineObject = {
-                
+                rmaLineObject = {
+
                     //site_ref = "fc"; //this shoudl be default value
                     co_num: conum.value, //"12345",
                     co_line: coline.value, // "A"
@@ -318,10 +313,10 @@
             displayJSON.textContent = JSON.stringify(formFields, null, 2);
 
 
-                  const displayJSON2 = document.getElementById('display-json2');
+            const displayJSON2 = document.getElementById('display-json2');
             //displayJSON2.textContent = JSON.stringify(rmaLineObject, null, 2);
 
-            //displayJSON2.textContent = JSON.stringify(rmaLineObject);
+            displayJSON2.textContent = JSON.stringify(rmaLineObject);
         });
 
 
@@ -381,7 +376,7 @@
         ===================================================================================
         */
 
-        async function fetchInfoFromAPIAsync(itemName, count) {       
+        async function fetchInfoFromAPIAsync(itemName, count) {
 
             const resultElement = document.getElementById('result');
 
@@ -390,14 +385,11 @@
 
             const itemToFetch = itemVal; //'Item003';
 
-        
+
             const reasonTextField = document.querySelector(`input[name="reason_text${count}"]`);
             const coNumField = document.querySelector(`input[name="co_num${count}"]`);
             const coLineField = document.querySelector(`input[name="co_line${count}"]`);
             const shipDateField = document.querySelector(`input[name="ship_date${count}"]`);
-
-            // Initialize an empty array to store the items
-            const items = [];
 
             await fetch('/data/itemdetail.json')
                 .then(function (response) {
@@ -407,17 +399,11 @@
                     return response.json();
                 })
                 .then(function (data) {
-                   
+                    //const itemToFetch = 'Item003'; // Replace with the item you want to fetch
 
-
-                    //const itemData = data.find(item => item.item === itemToFetch);
-
-                    const itemData = data; //.find(item => item.item === itemToFetch);
-
-
+                    const itemData = data.find(item => item.item === itemToFetch);
                     if (itemData) {
-                        
-                        //resultElement.textContent = JSON.stringify(itemData, null, 2);
+                        resultElement.textContent = JSON.stringify(itemData, null, 2);
 
                         //populate input fields with json data
                         const fetchedItemObject = {
@@ -431,45 +417,9 @@
                         coLineField.value = fetchedItemObject.co_line;
                         shipDateField.value = fetchedItemObject.ship_date;
 
-                    } 
-
-                        //looping through item details
-
-                        // Loop through the itemData
-                        for (const item of itemData) {
-                            // Check if the "item" property matches the target item
-                            if (item.item === itemToFetch) {
-                                // If a match is found, add the item to the results array
-                                items.push(item);
-                            }
-                        }
-
-                        // Check if any results were found
-                        if (items.length > 0) {
-                            // Output the results (you can customize this part)
-                            const outputDiv = document.getElementById("itemdetails");
-                            outputDiv.innerHTML = "<p>Found " + items.length + " matching item orders:</p>";
-                            for (const item of items) {
-                                outputDiv.innerHTML += "<p>CO Number: " + item.co_num + "</p>";
-                                 outputDiv.innerHTML += "<p>CO Line: " + item.co_line + "</p>";
-
-                                outputDiv.innerHTML += "<p>PO Number: " + item.po_num + "</p>";
-                          
-                                outputDiv.innerHTML += "<p>Item Description: " + item.description + "</p>";
-                            outputDiv.innerHTML += "<p>Ship Date: " + item.ship_date + "</p>";
-                            outputDiv.innerHTML += "------------------------------------------------</p>";
-                                // Add more output fields as needed
-                            }
-
-                        }
-                    
-                    
-                else {
-                    resultElement.textContent = 'Item not found';
-                }
-               
-                
-                
+                    } else {
+                        resultElement.textContent = 'Item not found';
+                    }
                 })
                 .catch(function (error) {
                     console.error('Error:', error);
@@ -526,10 +476,10 @@
                 });
 
 
-    
+
         }
 
-     function fetchInfoFromAPI(itemName, count) {
+        function fetchInfoFromAPI(itemName, count) {
             // Simulate an API call and populate fields with the response
             //const reasonTextField = document.querySelector(`input[name="reason_text${itemName}"]`);
             //const coNumField = document.querySelector(`input[name="co_num${itemName}"]`);
@@ -542,8 +492,8 @@
             var itemVal = document.getElementById(itemName).value;
             alert('itemVal: ' + itemVal);
 
-            const itemToFetch = itemVal; //'Item003'; 
-            
+            const itemToFetch = itemVal; //'Item003';
+
             //alert('count: ' + count);
 
             const reasonTextField = document.querySelector(`input[name="reason_text${count}"]`);
@@ -551,92 +501,88 @@
             const coLineField = document.querySelector(`input[name="co_line${count}"]`);
 
 
-           
+
 
             // Replace this with your actual API call
-            if (reasonTextField && coNumField && coLineField) 
-            {
-                alert ('all fields are ok for now..');
+            if (reasonTextField && coNumField && coLineField) {
+                alert('all fields are ok for now..');
                 // Only set values if the elements exist
                 setTimeout(function () {
-                    
+
                     //read from json file
 
                     //fs.readFile('~/data/itemdetail.json', 'utf8', (err, data) => {
-                  
 
-                  try {
+
+                    try {
 
                         alert('beginning of try..');
-                    //const response = await fetch('~/data/itemdetail.json');
+                        //const response = await fetch('~/data/itemdetail.json');
 
-                    const response = fetch('/data/itemdetail.json');
-                     resultElement.textContent = `HTTP error! Status: ${response.status}`;
-                    //const jsonData = JSON.parse(data);
+                        const response = fetch('/data/itemdetail.json');
+                        resultElement.textContent = `HTTP error! Status: ${response.status}`;
+                        //const jsonData = JSON.parse(data);
 
-                   //const jsonData = await response.json();
-                        const jsonData =  response.json();
+                        //const jsonData = await response.json();
+                        const jsonData = response.json();
 
-                    if (!response.ok) {
-                      throw new Error(`HTTP error! Status: ${response.status}`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
 
                             resultElement.textContent = `HTTP error! Status: ${response.status}`;
-                    }
+                        }
 
-                    else
-                    {
+                        else {
                             resultElement.textContent = JSON.stringify(jsonData, null, 2);
-                    }
-                    const itemData = jsonData.find(item => item.item === itemToFetch);
+                        }
+                        const itemData = jsonData.find(item => item.item === itemToFetch);
 
-                    if (itemData) {
-                      //console.log('Item Data:', itemData);
+                        if (itemData) {
+                            //console.log('Item Data:', itemData);
 
-                       //save corresponding item detail into an array object
+                            //save corresponding item detail into an array object
 
                             resultElement.textContent = JSON.stringify(itemData, null, 2);
 
-                           
-                        const apiResponse = {
-                                    //reason_text: itemData. //"Some Reason Text",
-                                    co_num: itemData.co_num, //"12345",
-                                    co_line: itemData.co_line, // "A"
-                        };
 
-                        //reasonTextField.value = apiResponse.reason_text;
-                        coNumField.value = apiResponse.co_num;
-                        coLineField.value = apiResponse.co_line;
+                            const apiResponse = {
+                                //reason_text: itemData. //"Some Reason Text",
+                                co_num: itemData.co_num, //"12345",
+                                co_line: itemData.co_line, // "A"
+                            };
+
+                            //reasonTextField.value = apiResponse.reason_text;
+                            coNumField.value = apiResponse.co_num;
+                            coLineField.value = apiResponse.co_line;
 
 
-                    } else {
-                       //console.log('Item not found');
+                        } else {
+                            //console.log('Item not found');
                             resultElement.textContent = 'Item not found';
-                    }
-                  } catch (error) {
-                    //console.error('Error parsing JSON:', error);
+                        }
+                    } catch (error) {
+                        //console.error('Error parsing JSON:', error);
 
                         resultElement.textContent = 'Error fetching data';
-                  }
+                    }
 
                 }, 1000); // Simulate API call delay (1 second)
-                
-            //});
+
+                //});
 
 
-                    
-                   
-               
-            } 
-            
-            else 
-            
-            {
+
+
+
+            }
+
+            else {
                 console.error("One or more elements not found in the DOM.");
             }
 
-     }
-        
-        //);
+        }
+
+                //);
     </script>
 
     <script>
@@ -663,7 +609,7 @@
         //    } else {
         //      resultElement2.textContent = 'Item not found';
         //    }
-          
+
         //  } catch (error) {
         //    console.error('Error:', error);
         //    resultElement2.textContent = 'Error fetching data';

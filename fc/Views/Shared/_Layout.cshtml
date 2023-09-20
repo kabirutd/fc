@@ -20,14 +20,16 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index"><strong>Home</strong></a>
                             
                         </li>
                          <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="RMA" asp-action="ViewRMAs">VIEW RMAS</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="RMA" asp-action="ViewRMAs"><strong>VIEW RMAS</strong></a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="RMA" asp-action="RMAV2">CREATE RMA</a>
+                            @*<a class="nav-link text-dark" asp-area="" asp-controller="RMA" asp-action="RMAV2">CREATE RMA</a>*@
+
+                            <a class="nav-link text-dark" href="/RMA/RMAV2/M654328"> <strong>CREATE RMA</strong></a>
                         </li>
 @*
                         
@@ -51,7 +53,8 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2023 - fc - @*<a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>*@
+            &nbsp;
+           @* &copy; 2023 - fc -*@ @*<a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>*@
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
