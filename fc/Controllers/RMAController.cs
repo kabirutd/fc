@@ -12,7 +12,19 @@ namespace fc.Controllers
             return View();
         }
 
-        public IActionResult RMA(string? custnum)
+        public IActionResult AddRMA(string? custnum)
+        {
+          
+            return View();
+        }
+
+        public IActionResult ViewRMAs(string? custnum)
+        {
+
+            return View();
+        }
+
+        public IActionResult RMATest(string? custnum)
         {
             string? cust_num = custnum;
 
